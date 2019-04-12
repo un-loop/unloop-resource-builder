@@ -24,7 +24,7 @@ module.exports = (basePath) => (...middleware) => (entity) => {
     }
 
     const resource = new Resource(entity, ...middleware.map((m) => convert.back(m)), builtResource);
-    resource.middleware = convert(resource.middleware);
+    resource.middleware = () => convert(resource.middleware());
 
     return resource;
 }
