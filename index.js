@@ -1,3 +1,4 @@
+const compose = require('koa-compose');
 const convert = require('koa-convert');
 const Resource = require('koa-resource-router');
 const checkPermission = require("unloop-check-permission").roles;
@@ -25,7 +26,12 @@ module.exports = (basePath) => (...middleware) => (entity) => {
 
     const resource = new Resource(entity, ...middleware.map((m) => convert.back(m)), builtResource);
     const oldMiddleware = resource.middleware;
+    const oldAdd = resource.add;
     resource.middleware = () => convert(oldMiddleware());
+    resource.add = (r) => {
+        oldAdd(r);
+        resource.middleware = compose(resource.middleware(), convert(r.middleware()));
+    }
 
     return resource;
 }
