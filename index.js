@@ -23,5 +23,8 @@ module.exports = (basePath) => (...middleware) => (entity) => {
         builtResource[entryPoint] = wrapExport(importedResorce, resourceModule.permissions, entryPoint);
     }
 
-    return new Resource(entity, ...middleware, builtResource);
+    const resource = new Resource(entity, ...middleware.map((m) => convert.back(m)), builtResource);
+    resource.middleware = convert(resource.middleware);
+
+    return resource;
 }

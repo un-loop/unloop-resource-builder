@@ -1,6 +1,6 @@
 {
   "name": "unloop-resource-builder",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "builder for koa-resource-router using unloop's resorce/entity pattern",
   "main": "index.js",
   "scripts": {
