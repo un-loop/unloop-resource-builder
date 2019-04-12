@@ -30,7 +30,11 @@ module.exports = (basePath) => (...middleware) => (entity) => {
     resource.middleware = () => convert(oldMiddleware());
     resource.add = (r) => {
         oldAdd(r);
-        resource.middleware = compose(resource.middleware(), convert(r.middleware()));
+        const lastMiddleware = resource.middleware; //need to capture context of middleware at time of add() invocation to ensure dynamic chaining of composition
+        resource.middleware = () => compose(convert(r.middleware()), lastMiddleware()); //watch composition order, we want nested resources to trigger first, ensuring a depth-first traversal 
+                                                                                        //e.g. /api/orders/1/notes/5 will trigger the notes handler before orders
+                                                                                        //we will trigger the last added resource first amongst same nesting level, but that should be ok
+                                                                                        //since they should have distinct routes
     }
 
     return resource;
