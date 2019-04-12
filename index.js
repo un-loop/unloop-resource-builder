@@ -25,16 +25,16 @@ module.exports = (basePath) => (...middleware) => (entity) => {
     }
 
     const resource = new Resource(entity, ...middleware.map((m) => convert.back(m)), builtResource);
-    const oldMiddleware = resource.middleware;
-    const oldAdd = resource.add;
+    const oldMiddleware = resource.middleware.bind(resource);
+    const oldAdd = resource.add.bind(resource);
     resource.middleware = () => convert(oldMiddleware());
-    resource.add = (r) => {
+    resource.add = (r) => {  // we need to replace the add method on Resource since it does not chain middleware of nested resources, with a method that does.
         oldAdd(r);
-        const lastMiddleware = resource.middleware; //need to capture context of middleware at time of add() invocation to ensure dynamic chaining of composition
-        resource.middleware = () => compose(convert(r.middleware()), lastMiddleware()); //watch composition order, we want nested resources to trigger first, ensuring a depth-first traversal 
-                                                                                        //e.g. /api/orders/1/notes/5 will trigger the notes handler before orders
-                                                                                        //we will trigger the last added resource first amongst same nesting level, but that should be ok
-                                                                                        //since they should have distinct routes
+        const lastMiddleware = resource.middleware.bind(resource); // need to capture context of middleware at time of add() invocation to ensure dynamic chaining of composition
+        resource.middleware = () => compose([convert(r.middleware()), lastMiddleware()]); // watch composition order, we want nested resources to trigger first, ensuring a depth-first traversal
+                                                                                          // e.g. /api/orders/1/notes/5 will trigger the notes handler before orders
+                                                                                          // we will trigger the last added resource first amongst same nesting level, but that should be ok
+                                                                                          // since they should have distinct routes
     }
 
     return resource;
